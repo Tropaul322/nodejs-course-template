@@ -1,8 +1,13 @@
 const DB = require('../../common/inMemeryDB');
-const getAll = async () => DB;
-const getUser = async id => DB.filter(el => el.id === id)[0];
+const getAll = async () => DB.getAllUser();
+const getUser = async id => DB.getUser(id);
 const createUser = async user => {
-  DB.push(user);
-  return getUser(user.id);
+  return DB.createUser(user);
 };
-module.exports = { getAll, getUser, createUser };
+const deleteUser = async id => {
+  return DB.deleteUser(id);
+};
+const changeUser = async (id, body) => {
+  return DB.changeUser(id, body);
+};
+module.exports = { getAll, getUser, createUser, deleteUser, changeUser };

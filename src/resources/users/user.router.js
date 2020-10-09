@@ -21,5 +21,14 @@ router.route('/').post(async (req, res) => {
   );
   res.json(User.toResponse(newUser));
 });
+router.route('/:id').delete(async (req, res) => {
+  const users = await usersService.deleteUser(req.params.id);
+  res.json(users.map(User.toResponse));
+});
+router.route('/:id').put(async (req, res) => {
+  const body = req.body;
+  const users = await usersService.changeUser(req.params.id, body);
+  res.json(users.map(User.toResponse));
+});
 
 module.exports = router;
