@@ -5,12 +5,13 @@ const tasksService = require('../tasks/tasks.service');
 
 router.route('/').get(async (req, res) => {
   const users = await usersService.getAll();
-  // map user fields to exclude secret fields like "password"
-  res.json(users.map(User.toResponse));
+  res.status(200).json(users.map(User.toResponse));
 });
 router.route('/:id').get(async (req, res) => {
   const user = await usersService.getUser(req.params.id);
-  res.json(User.toResponse(user));
+  if (user) {
+    res.status(200).json(User.toResponse(user));
+  } else res.status(404).json({});
 });
 router.route('/').post(async (req, res) => {
   const newUser = await usersService.createUser(
@@ -20,7 +21,7 @@ router.route('/').post(async (req, res) => {
       password: req.body.password
     })
   );
-  res.json(User.toResponse(newUser));
+  res.status(200).json(User.toResponse(newUser));
 });
 router.route('/:id').delete(async (req, res) => {
   const deleted = await usersService.deleteUser(req.params.id);
@@ -32,7 +33,9 @@ router.route('/:id').delete(async (req, res) => {
 router.route('/:id').put(async (req, res) => {
   const body = req.body;
   const users = await usersService.changeUser(req.params.id, body);
-  res.json(users.map(User.toResponse));
+  if (users) {
+    res.status(200).json(User.toResponse(users));
+  } else res.status(404).json({});
 });
 
 module.exports = router;
