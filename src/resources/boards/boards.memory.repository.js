@@ -8,7 +8,11 @@ const createBoard = async board => {
 const getBoard = async id => DB.getBoard(id);
 
 const deleteBoard = async id => {
-  return DB.deleteBoard(id);
+  const boards = await DB.deleteBoard(id);
+  if (!boards) {
+    throw new Error('Board not found');
+  }
+  return boards;
 };
 
 const changeBoard = async (id, body) => {

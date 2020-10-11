@@ -4,7 +4,6 @@ const boardsService = require('./boards.service');
 
 router.route('/').get(async (req, res) => {
   const boards = await boardsService.getAllBoards();
-  // map user fields to exclude secret fields like "password"
   res.json(boards.map(Board.toResponse));
 });
 router.route('/').post(async (req, res) => {
@@ -17,13 +16,21 @@ router.route('/').post(async (req, res) => {
   res.json(Board.toResponse(newBoard));
 });
 router.route('/:id').get(async (req, res) => {
-  const board = await boardsService.getBoard(req.params.id);
-  res.json(Board.toResponse(board));
+  try {
+    const board = await boardsService.getBoard(req.params.id);
+    res.json(Board.toResponse(board));
+  } catch (err) {
+    res.status(404).send('board not found');
+  }
 });
 
 router.route('/:id').delete(async (req, res) => {
-  const boards = await boardsService.deleteBoard(req.params.id);
-  res.json(boards.map(Board.toResponse));
+  try {
+    await boardsService.deleteBoard(req.params.id);
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(404);
+  }
 });
 
 router.route('/:id').put(async (req, res) => {

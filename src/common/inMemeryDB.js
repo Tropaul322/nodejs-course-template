@@ -1,5 +1,6 @@
 const User = require('./../resources/users/user.model');
 const Board = require('../resources/boards/boards.model');
+const Column = require('../resources/columns/column.model');
 const DB = {
   users: [],
   boards: []
@@ -18,7 +19,11 @@ const createUser = user => {
 };
 const deleteUser = id => {
   const userIndex = DB.users.findIndex(el => el.id === id);
-  DB.users.splice(userIndex, 1);
+  if (userIndex !== -1) {
+    DB.users.splice(userIndex, 1);
+  } else {
+    return;
+  }
   return DB.users;
 };
 const changeUser = (id, body) => {
@@ -44,10 +49,12 @@ const getBoard = id => {
   return DB.boards.slice(0).filter(el => el.id === id)[0];
 };
 const deleteBoard = id => {
-  DB.boards.splice(
-    DB.boards.findIndex(el => el.id === id),
-    1
-  );
+  const boardIndex = DB.boards.findIndex(el => el.id === id);
+  if (boardIndex !== -1) {
+    DB.boards.splice(boardIndex, 1);
+  } else {
+    return;
+  }
   return DB.boards;
 };
 const changeBoard = (id, body) => {
@@ -61,7 +68,11 @@ const changeBoard = (id, body) => {
 };
 
 DB.users.push(new User({ id: '1' }), new User(), new User());
-DB.boards.push(new Board({ id: '1' }), new Board(), new Board());
+DB.boards.push(
+  new Board({ id: '1', columns: [new Column()] }),
+  new Board({ columns: [new Column()] }),
+  new Board({ columns: [new Column()] })
+);
 
 module.exports = {
   getAllUser,
