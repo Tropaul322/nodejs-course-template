@@ -1,11 +1,11 @@
-const User = require('./../resources/users/user.model');
-const Board = require('../resources/boards/boards.model');
-const Column = require('../resources/columns/column.model');
+const Task = require('../resources/tasks/tasks.model');
 const DB = {
   users: [],
-  boards: []
+  boards: [],
+  tasks: []
 };
 
+// Users
 const getAllUser = () => {
   return DB.users.slice(0);
 };
@@ -21,10 +21,9 @@ const deleteUser = id => {
   const userIndex = DB.users.findIndex(el => el.id === id);
   if (userIndex !== -1) {
     DB.users.splice(userIndex, 1);
-  } else {
-    return;
+    return true;
   }
-  return DB.users;
+  return;
 };
 const changeUser = (id, body) => {
   const userIndex = DB.users.findIndex(el => el.id === id);
@@ -37,6 +36,7 @@ const changeUser = (id, body) => {
   return DB.users;
 };
 
+// Boards
 const getAllBoards = () => {
   return DB.boards.slice(0);
 };
@@ -52,10 +52,9 @@ const deleteBoard = id => {
   const boardIndex = DB.boards.findIndex(el => el.id === id);
   if (boardIndex !== -1) {
     DB.boards.splice(boardIndex, 1);
-  } else {
-    return;
+    return true;
   }
-  return DB.boards;
+  return false;
 };
 const changeBoard = (id, body) => {
   const boardIndex = DB.boards.findIndex(el => el.id === id);
@@ -67,12 +66,48 @@ const changeBoard = (id, body) => {
   return DB.boards;
 };
 
-DB.users.push(new User({ id: '1' }), new User(), new User());
-DB.boards.push(
-  new Board({ id: '1', columns: [new Column()] }),
-  new Board({ columns: [new Column()] }),
-  new Board({ columns: [new Column()] })
-);
+// Tasks
+const getAll = boardId => {
+  return DB.tasks.filter(el => el.boardId === boardId);
+};
+const postTask = (boardId, task) => {
+  task.boardId = boardId;
+  const newTask = new Task(task);
+  DB.tasks.push(newTask);
+  return newTask;
+};
+const getTask = (boardId, id) => {
+  return DB.tasks.filter(el => el.boardId === boardId && el.id === id)[0];
+};
+
+const changeTask = (boardId, id, body) => {
+  const taskIndex = DB.tasks.findIndex(el => el.id === id);
+  if (taskIndex !== -1) {
+    const newTask = new Task(body);
+    DB.tasks[taskIndex] = newTask;
+    return newTask;
+  }
+  return false;
+};
+
+const deleteTask = async (boardId, id) => {
+  const taskIndex = DB.tasks.findIndex(el => el.id === id);
+  if (taskIndex !== -1) {
+    DB.tasks.splice(taskIndex, 1);
+    return true;
+  }
+  return false;
+};
+const deleteAllBoardTasks = boardId => {
+  DB.tasks.forEach((el, id) =>
+    el.boardId === boardId ? (DB.tasks[id] = {}) : null
+  );
+};
+const deleteAllUsersId = userId => {
+  DB.tasks.forEach((el, id) =>
+    el.userId === userId ? (DB.tasks[id].userId = null) : null
+  );
+};
 
 module.exports = {
   getAllUser,
@@ -84,5 +119,12 @@ module.exports = {
   createBoard,
   getBoard,
   deleteBoard,
-  changeBoard
+  changeBoard,
+  getAll,
+  postTask,
+  getTask,
+  changeTask,
+  deleteTask,
+  deleteAllBoardTasks,
+  deleteAllUsersId
 };
