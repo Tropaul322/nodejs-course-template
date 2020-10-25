@@ -1,63 +1,35 @@
+const { OK, NO_CONTENT } = require('http-status-codes');
 const router = require('express').Router({ mergeParams: true });
+const { toResponse } = require('./tasks.model');
 const taskService = require('./tasks.service');
-const { logger } = require('../../common/logger');
 
-router.route('/').get(async (req, res) => {
-  try {
-    const boardId = req.params.boardId;
-    const tasks = await taskService.getAll(boardId);
-    res.status(200).json(tasks);
-  } catch (e) {
-    logger.error('error', e.stack);
-  }
-});
-router.route('/:id').get(async (req, res) => {
-  try {
-    const boardId = req.params.boardId;
-    const taskID = req.params.id;
-    const task = await taskService.getTask(boardId, taskID);
-    if (task) {
-      res.status(200).json(task);
-    } else {
-      res.status(404).send('cannot find task');
-    }
-  } catch (e) {
-    logger.error('error', e.stack);
-  }
+router.get('/', async (req, res) => {
+  const task = await taskService.getAll(req.params.boardId);
+  await res.status(OK).json(task.map(toResponse));
 });
 
-router.route('/').post(async (req, res) => {
-  try {
-    const boardId = req.params.boardId;
-    const task = await taskService.postTask(boardId, req.body);
-    res.status(200).json(task);
-  } catch (e) {
-    logger.error('error', e.stack);
-  }
+router.get('/:id', async (req, res) => {
+  const task = await taskService.get(req.params.boardId, req.params.id);
+  res.status(OK).send(toResponse(task));
 });
-router.route('/:id').put(async (req, res) => {
-  try {
-    const boardId = req.params.boardId;
-    const taskID = req.params.id;
-    const body = req.body;
-    const task = await taskService.changeTask(boardId, taskID, body);
-    if (task) {
-      res.status(200).json(task);
-    } else res.status(404).json({});
-  } catch (e) {
-    logger.error('error', e.stack);
-  }
+
+router.delete('/:id', async (req, res) => {
+  await taskService.remove(req.params.boardId, req.params.id);
+  res.sendStatus(NO_CONTENT);
 });
-router.route('/:id').delete(async (req, res) => {
-  try {
-    const boardId = req.params.boardId;
-    const taskID = req.params.id;
-    const deleted = await taskService.deleteTask(boardId, taskID);
-    if (deleted) {
-      res.status(204).json([]);
-    } else res.status(404).json({});
-  } catch (e) {
-    logger.error('error', e.stack);
-  }
+
+router.post('/', async (req, res) => {
+  const task = await taskService.save(req.params.boardId, req.body);
+  res.status(OK).send(toResponse(task));
 });
+
+router.put('/:id', async (req, res) => {
+  const task = await taskService.update(
+    req.params.boardId,
+    req.params.id,
+    req.body
+  );
+  res.status(OK).send(toResponse(task));
+});
+
 module.exports = router;

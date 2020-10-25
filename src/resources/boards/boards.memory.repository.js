@@ -1,27 +1,35 @@
-const DB = require('../../common/inMemeryDB');
-const getAllBoards = async () => DB.getAllBoards();
+const { Board } = require('./boards.model');
+const { NOT_FOUND_ERROR } = require('../../errors/appError');
+const ENTITY_NAME = 'Board';
+const taskService = require('../tasks/tasks.service');
 
-const createBoard = async board => {
-  return DB.createBoard(board);
+const getAll = async () => Board.find({});
+
+const save = async boards => {
+  const board = await Board.create(boards);
+  return board;
 };
-
-const getBoard = async id => DB.getBoard(id);
-
-const deleteBoard = async id => {
-  const boards = await DB.deleteBoard(id);
-  if (!boards) {
-    throw new Error('Board not found');
+const get = async id => {
+  const board = await Board.findById(id);
+  if (!board) {
+    throw new NOT_FOUND_ERROR(`${ENTITY_NAME} was not found`);
   }
-  return boards;
+  return board;
 };
 
-const changeBoard = async (id, body) => {
-  return DB.changeBoard(id, body);
+const remove = async id => {
+  const board = await Board.findById(id);
+  if (!board) {
+    throw new NOT_FOUND_ERROR(`${ENTITY_NAME} was not found`);
+  }
+  taskService.deleteAllTasksWithBoard(id);
+  await Board.deleteOne({ _id: id });
+  return board;
 };
-module.exports = {
-  getAllBoards,
-  createBoard,
-  getBoard,
-  deleteBoard,
-  changeBoard
+
+const update = async (id, board) => {
+  await Board.updateOne({ _id: id }, board);
+  return get(id);
 };
+
+module.exports = { getAll, save, get, remove, update };

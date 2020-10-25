@@ -1,73 +1,70 @@
-const morgan = require('morgan');
-const path = require('path');
+const { LOGS_DIR } = require('./config');
 const winston = require('winston');
-const { combine, cli } = winston.format;
+const morgan = require('morgan');
+const { combine, timestamp, prettyPrint } = winston.format;
 
-morgan.token('BODY', req => {
-  let body = req.body;
-  if (body.password) {
-    body = { ...body, password: '***' };
-  }
-  return JSON.stringify(body);
-});
-morgan.token('QUERY', req => JSON.stringify(req.query));
+morgan.token('body', req =>
+  JSON.stringify(req.body).replace(/,("password":").+"/, '$1***"')
+);
+morgan.token('query', req => JSON.stringify(req.query));
 
-const files = {
-  error: {
-    level: 'error',
-    filename: path.resolve(__dirname, '../../', 'logs', 'error.log'),
-    json: true,
-    maxFiles: 1,
-    maxsize: 5242880
-  },
-  info: {
+const format = combine(timestamp(), prettyPrint());
+const options = {
+  fileInfo: {
+    format,
     level: 'info',
-    filename: path.resolve(__dirname, '../../', 'logs', 'log.log'),
-    json: true,
-    maxFiles: 1,
-    maxsize: 1024 * 5000,
+    filename: `${LOGS_DIR}/app.log`,
     handleExceptions: true,
+    handleRejections: true,
+    json: true,
+    maxsize: 1024 * 5000,
+    maxFiles: 5,
+    colorize: false
+  },
+  fileUnhandled: {
+    format,
+    level: 'error',
+    filename: `${LOGS_DIR}/exceptions.log`,
+    handleExceptions: true,
+    handleRejections: true,
+    json: true,
+    maxsize: 1024 * 5000,
+    maxFiles: 5,
+    colorize: false
+  },
+  fileError: {
+    format,
+    level: 'error',
+    filename: `${LOGS_DIR}/errors.log`,
+    json: true,
+    maxsize: 1024 * 5000,
+    maxFiles: 5,
     colorize: false
   }
 };
 
 const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.prettyPrint(),
-    winston.format.printf(info => {
-      return `${info.timestamp} - ${info.message.split('\n')[0]}`;
-    })
-  ),
   transports: [
-    new winston.transports.File(files.error),
-    new winston.transports.File(files.info)
+    new winston.transports.File(options.fileError),
+    new winston.transports.File(options.fileInfo)
   ],
+  exceptionHandlers: [new winston.transports.File(options.fileUnhandled)],
   exitOnError: true
 });
 
-logger.add(
-  new winston.transports.Console({
-    format: combine(cli())
-  })
-);
+if (process.env.NODE_ENV === 'development') {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+      handleExceptions: true,
+      handleRejections: true,
+      colorize: false
+    })
+  );
+}
 
 logger.stream = {
   write: message => logger.info(message)
 };
 
-const requestLogger = morgan(
-  ':date[web] - METHOD::method - STATUS::status - :url - QUERY::QUERY - BODY::BODY - :response-time ms',
-  {
-    stream: logger.stream
-  }
-);
-
-process.on('uncaughtException', err => {
-  logger.error(`Uncaught ${err.stack}`);
-});
-process.on('unhandledRejection', promise => {
-  logger.error(`Promise ${promise.stack}`);
-});
-
-module.exports = { requestLogger, logger };
+module.exports = logger;
