@@ -5,6 +5,7 @@ const getAll = id => tasksRepo.getAll(id);
 const get = (boardId, id) => tasksRepo.get(boardId, id);
 
 const remove = (boardId, id) => tasksRepo.remove(boardId, id);
+
 const save = (boardId, task) => {
   return tasksRepo.save(boardId, task);
 };
