@@ -20,7 +20,6 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const board = await boardService.save(req.body);
-  console.log(req.body);
   res.status(OK).send(toResponse(board));
 });
 

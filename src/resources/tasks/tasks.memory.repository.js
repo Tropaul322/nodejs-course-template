@@ -6,7 +6,6 @@ const getAll = async id => Task.find({ boardId: id });
 
 const save = async (boardId, tasks) => {
   tasks.boardId = boardId;
-  console.log(tasks);
   const task = Task.create(tasks);
   return task;
 };
@@ -30,7 +29,6 @@ const remove = async (boardId, id) => {
 const update = async (boardId, id, tasks) => {
   tasks.boardId = boardId;
   const task = await Task.find({ boardId, _id: id });
-  console.log(task[0]);
   if (!task[0]) {
     throw new NOT_FOUND_ERROR(`${ENTITY_NAME} was not found`);
   }
