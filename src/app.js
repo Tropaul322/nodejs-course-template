@@ -14,7 +14,9 @@ const winston = require('./common/logger');
 const userRouter = require('./resources/users/user.router');
 const boardRouter = require('./resources/boards/boards.router');
 const tasksRouter = require('./resources/tasks/tasks.router');
-const errorHandler = require('./errors/errorHandler');
+const loginRouter = require('./logging/loginRouter');
+const handle = require('./errors/errorHandler');
+const checkTokens = require('./common/checkTokens');
 
 const app = express();
 const swaggerDocument = YAML.load(path.join(__dirname, '../doc/api.yaml'));
@@ -43,14 +45,15 @@ app.use(
     }
   )
 );
-
+app.use('/login', loginRouter);
+app.use(checkTokens);
 app.use('/users', userRouter);
 app.use('/boards', boardRouter);
 boardRouter.use('/:boardId/tasks', tasksRouter);
 
 app.use((req, res, next) => next(createError(NOT_FOUND)));
 
-app.use(errorHandler);
+app.use(handle);
 
 // throw Error('Oops!');
 // Promise.reject(Error('Oops!'));
