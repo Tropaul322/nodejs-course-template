@@ -9,7 +9,7 @@ router.post('/', async (req, res, next) => {
     if (!user) {
       res.status(403).send('Wrong login or password');
     }
-    const token = loginService.getToken(user);
+    const token = loginService.createToken(user);
     if (!token) {
       throw new Error();
     }
